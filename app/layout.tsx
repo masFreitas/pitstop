@@ -17,14 +17,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Link href="/" className="flex items-center gap-4 text-2xl font-bold">
             PitStop
           </Link>
-          {/* <div>
+          <div>
             <Link
-              href="/criar-anotacao"
-              className="bg-green-800 p-4 text-xl font-bold uppercase rounded-xl hover:bg-yellow-800"
+              href="/cadastrar-veiculo"
+              className="bg-gray-900 text-white p-4 text-xl font-bold uppercase rounded-xl hover:bg-green-700"
             >
-              Criar anotação
+              Cadastrar Veículo
             </Link>
-          </div> */}
+          </div>
         </header>
         {children}
         <ToastContainer position="bottom-center" theme="dark" />
