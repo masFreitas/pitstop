@@ -89,6 +89,85 @@ export async function deleteVehicle(id: number) {
     };
 }
 
+// Editar veiculo
+export async function updateVehicle(
+    id: number,
+    plate: string,
+    model: string,
+    brand: string,
+    year: number,
+    current_km: number
+) {
+    const vehicle = await listVehicleById(id);
+
+    if (!vehicle) {
+        return {
+            sucesso: false,
+            mensagem: "Veículo não encontrado!",
+        };
+    }
+
+    const trimmedPlate = plate.trim();
+    const trimmedModel = model.trim();
+    const trimmedBrand = brand.trim();
+
+    if (trimmedPlate.length !== 7) {
+        return {
+            sucesso: false,
+            mensagem: "A placa precisa ter 7 caracteres (ex: AAA1A11).",
+        };
+    } else if (trimmedBrand.length === 0 || trimmedModel.length === 0) {
+        return {
+            sucesso: false,
+            mensagem: "Marca e modelo são obrigatórios.",
+        };
+    } else if (Number.isNaN(year) || year < 1885) {
+        return {
+            sucesso: false,
+            mensagem: "O ano precisa ser maior que 1885.",
+        };
+    } else if (Number.isNaN(current_km) || current_km < 0) {
+        return {
+            sucesso: false,
+            mensagem: "O km atual não pode ser negativo.",
+        };
+    }
+
+    const placaExistente = await prisma.vehicles.findFirst({
+        where: {
+            userId: vehicle.userId,
+            plate: trimmedPlate,
+            id: { not: vehicle.id },
+        },
+    });
+
+    if (placaExistente) {
+        return {
+            sucesso: false,
+            mensagem: "Você já tem outro veículo cadastrado com essa placa.",
+        };
+    }
+
+    await prisma.vehicles.update({
+        where: { id: vehicle.id },
+        data: {
+            plate: trimmedPlate,
+            model: trimmedModel,
+            brand: trimmedBrand,
+            year,
+            current_km,
+        },
+    });
+
+    revalidatePath("/");
+    revalidatePath(`/editar-veiculo/${vehicle.id}`);
+
+    return {
+        sucesso: true,
+        mensagem: "Veículo atualizado com sucesso!",
+    };
+}
+
 // Listar todas as manutencoes
 export async function listMaintenance() {
     return prisma.maintenance.findMany({
