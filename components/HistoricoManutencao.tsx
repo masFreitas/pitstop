@@ -1,4 +1,5 @@
 import { listMaintenance } from "@/app/veiculos-crud";
+import { DeleteMaintenanceButton } from "./BotaoExcluirManutencao";
 
 export async function MaintenanceList() {
     const maintenances = await listMaintenance();
@@ -32,12 +33,13 @@ export async function MaintenanceList() {
                             <th className="px-4 py-3 font-semibold">Km</th>
                             <th className="px-4 py-3 font-semibold">Data</th>
                             <th className="px-4 py-3 text-right font-semibold">Valor</th>
+                            <th className="px-4 py-3 text-center font-semibold">Ações</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                         {maintenances.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
+                                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
                                     Nenhuma manutenção registrada.
                                 </td>
                             </tr>
@@ -66,6 +68,12 @@ export async function MaintenanceList() {
                                             style: "currency",
                                             currency: "BRL",
                                         })}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        <DeleteMaintenanceButton 
+                                            maintenanceId={maintenance.id}
+                                            servicePart={maintenance.service_part}
+                                        />
                                     </td>
                                 </tr>
                             ))

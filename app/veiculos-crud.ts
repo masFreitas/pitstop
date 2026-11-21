@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "../lib/prisma";
 
 // Lista todos os veículos
@@ -71,6 +72,17 @@ export async function listMaintenance() {
     });
 }
 
+// buscar manutencao por ID
+export async function listMaintenanceById(id: number) {
+    const maintenance = await prisma.maintenance.findUnique({
+        where: {
+            id,
+        },
+    });
+
+    return maintenance;
+}
+
 // Criar manutencao
 export async function createMaintenance(vehicleId: number, service_part: string, cost: number, km_maintenance: number, date_maintenance?: Date) {
 
@@ -104,11 +116,11 @@ export async function createMaintenance(vehicleId: number, service_part: string,
 
     await prisma.maintenance.create({
         data: {
-           service_part: service_part.trim(),
-           cost,
-           km_maintenance,
-           date_maintenance,
-           vehicle: { connect: { id: vehicleId} }
+            service_part: service_part.trim(),
+            cost,
+            km_maintenance,
+            date_maintenance,
+            vehicle: { connect: { id: vehicleId } }
         },
     });
 
@@ -119,3 +131,26 @@ export async function createMaintenance(vehicleId: number, service_part: string,
 
 }
 
+export async function deleteMaintenance(id: number) {
+    const maintenance = await listMaintenanceById(id);
+
+    if (!maintenance) {
+        return {
+            sucesso: false,
+            mensagem: "Manutenção não encontrada!"
+        }
+    }
+
+    await prisma.maintenance.delete({
+        where: {
+            id: maintenance.id
+        }
+    });
+
+    revalidatePath("/");
+
+    return {
+        sucesso: true,
+        mensagem: "Manutenção excluída com sucesso!"
+    }
+}
