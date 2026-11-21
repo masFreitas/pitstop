@@ -2,9 +2,27 @@ import { listMaintenance } from "@/app/veiculos-crud";
 
 export async function MaintenanceList() {
     const maintenances = await listMaintenance();
+    const totalGasto = maintenances.reduce(
+        (total, maintenance) => total + maintenance.cost,
+        0
+    );
 
     return (
         <div className="p-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-xl font-bold text-gray-900">
+                    Histórico de Manutenções
+                </h2>
+                <p className="text-sm font-semibold text-gray-700">
+                    Total gasto:{" "}
+                    <span className="text-lg font-bold text-green-700">
+                        {totalGasto.toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                        })}
+                    </span>
+                </p>
+            </div>
             <div className="overflow-x-auto rounded-s border-2 border-gray-300">
                 <table className="w-full border-collapse text-left text-sm">
                     <thead className="border-b-2 border-gray-300 bg-gray-100 text-xs uppercase text-gray-600">

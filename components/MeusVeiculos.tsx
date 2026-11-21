@@ -7,7 +7,6 @@ export async function VehicleList() {
     const vehicles = await listVehicles();
 
     const vehiclesList = vehicles.map((vehicle) => (
-        // <Link href={`/editar-veiculo/${vehicle.id}`} key={vehicle.id}>
         <li
             key={vehicle.id}
             className="flex flex-col gap-3 rounded-s border-2 border-gray-300 p-5"
@@ -33,8 +32,13 @@ export async function VehicleList() {
                     </p>
                 </div>
             </div>
+            <div className="border-t border-gray-300 pt-3">
+                <Link href={`/cadastrar-manutencao/${vehicle.id}`}
+                className="block w-full rounded-md bg-gray-900 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-green-700">
+                    + Nova manutenção
+                </Link>
+            </div>
         </li>
-        // </Link>
     ));
 
     return (
