@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { requireUser } from "@/lib/auth";
 import { listVehicleById } from "@/app/veiculos-crud";
 import { EditVehicleForm } from "@/components/EditarVeiculoForm";
 
@@ -8,6 +9,7 @@ type EditarVeiculoPageProps = {
 };
 
 async function EditarVeiculoContent({ params }: EditarVeiculoPageProps) {
+    await requireUser();
     const { vehicleId } = await params;
     const id = Number(vehicleId);
 

@@ -1,43 +1,80 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getSessionUser } from "@/lib/auth";
 import { prisma } from "../lib/prisma";
 
-// Lista todos os veículos
+// Lista somente os veículos do usuário logado
 export async function listVehicles() {
-    return prisma.vehicles.findMany();
+    const user = await getSessionUser();
+
+    if (!user) {
+        return [];
+    }
+
+    return prisma.vehicles.findMany({
+        where: { userId: user.id },
+    });
 }
 
-// Buscar veiculo por id
+// Buscar veículo por id somente se pertencer ao usuário logado
 export async function listVehicleById(id: number) {
-    const vehicle = await prisma.vehicles.findUnique({
+    const user = await getSessionUser();
+
+    if (!user) {
+        return null;
+    }
+
+    const vehicle = await prisma.vehicles.findFirst({
         where: {
             id,
+            userId: user.id,
         },
     });
 
     return vehicle;
 }
 
-//criar veiculo
+// Criar veículo vinculado ao usuário logado
 export async function createVehicle(plate: string, model: string, brand: string, year: number, current_km: number) {
-    if (plate.length !== 7) {
+    const user = await getSessionUser();
+
+    if (!user) {
+        return {
+            sucesso: false,
+            mensagem: "Você precisa estar logado para cadastrar um veículo.",
+        };
+    }
+
+    const trimmedPlate = plate.trim();
+    const trimmedModel = model.trim();
+    const trimmedBrand = brand.trim();
+
+    if (trimmedPlate.length !== 7) {
         return {
             sucesso: false,
             mensagem: "A placa precisa ter 7 caracteres (ex: AAA1A11)."
         };
-    } else if (year < 1885) {
+    } else if (trimmedBrand.length === 0 || trimmedModel.length === 0) {
         return {
             sucesso: false,
-            mensagem: "A ano precisa ser maior que 1885."
+            mensagem: "Marca e modelo são obrigatórios."
         };
-    };
-
-    const userId = 1; // TODO: trocar pelo usuário logado
+    } else if (Number.isNaN(year) || year < 1885) {
+        return {
+            sucesso: false,
+            mensagem: "O ano precisa ser maior que 1885."
+        };
+    } else if (Number.isNaN(current_km) || current_km < 0) {
+        return {
+            sucesso: false,
+            mensagem: "O km atual não pode ser negativo."
+        };
+    }
 
     // Verifica se o usuário já tem um veículo com essa placa
     const placaExistente = await prisma.vehicles.findFirst({
-        where: { userId, plate },
+        where: { userId: user.id, plate: trimmedPlate },
     });
 
     if (placaExistente) {
@@ -49,24 +86,40 @@ export async function createVehicle(plate: string, model: string, brand: string,
 
     await prisma.vehicles.create({
         data: {
-            plate,
-            model,
-            brand,
+            plate: trimmedPlate,
+            model: trimmedModel,
+            brand: trimmedBrand,
             year,
             current_km,
-            owner: { connect: { id: userId } },
+            owner: { connect: { id: user.id } },
         },
     });
+
+    revalidatePath("/");
 
     return {
         sucesso: true,
         mensagem: "Veículo cadastrado com sucesso!"
-    }
+    };
 }
 
-// Excluir veiculo
+// Excluir veículo somente se pertencer ao usuário logado
 export async function deleteVehicle(id: number) {
-    const vehicle = await listVehicleById(id);
+    const user = await getSessionUser();
+
+    if (!user) {
+        return {
+            sucesso: false,
+            mensagem: "Você precisa estar logado para excluir um veículo.",
+        };
+    }
+
+    const vehicle = await prisma.vehicles.findFirst({
+        where: {
+            id,
+            userId: user.id,
+        },
+    });
 
     if (!vehicle) {
         return {
@@ -89,7 +142,7 @@ export async function deleteVehicle(id: number) {
     };
 }
 
-// Editar veiculo
+// Editar veículo somente se pertencer ao usuário logado
 export async function updateVehicle(
     id: number,
     plate: string,
@@ -98,7 +151,21 @@ export async function updateVehicle(
     year: number,
     current_km: number
 ) {
-    const vehicle = await listVehicleById(id);
+    const user = await getSessionUser();
+
+    if (!user) {
+        return {
+            sucesso: false,
+            mensagem: "Você precisa estar logado para editar um veículo.",
+        };
+    }
+
+    const vehicle = await prisma.vehicles.findFirst({
+        where: {
+            id,
+            userId: user.id,
+        },
+    });
 
     if (!vehicle) {
         return {
@@ -135,7 +202,7 @@ export async function updateVehicle(
 
     const placaExistente = await prisma.vehicles.findFirst({
         where: {
-            userId: vehicle.userId,
+            userId: user.id,
             plate: trimmedPlate,
             id: { not: vehicle.id },
         },
@@ -168,29 +235,62 @@ export async function updateVehicle(
     };
 }
 
-// Listar todas as manutencoes
+// Listar somente as manutenções dos veículos do usuário logado
 export async function listMaintenance() {
+    const user = await getSessionUser();
+
+    if (!user) {
+        return [];
+    }
+
     return prisma.maintenance.findMany({
+        where: {
+            vehicle: {
+                userId: user.id,
+            },
+        },
         include: { vehicle: true },
         orderBy: { date_maintenance: "desc" },
     });
 }
 
-// buscar manutencao por ID
+// Buscar manutenção por ID somente se o veículo pertencer ao usuário logado
 export async function listMaintenanceById(id: number) {
-    const maintenance = await prisma.maintenance.findUnique({
+    const user = await getSessionUser();
+
+    if (!user) {
+        return null;
+    }
+
+    const maintenance = await prisma.maintenance.findFirst({
         where: {
             id,
+            vehicle: {
+                userId: user.id,
+            },
         },
     });
 
     return maintenance;
 }
 
-// Criar manutencao
+// Criar manutenção somente em veículo do usuário logado
 export async function createMaintenance(vehicleId: number, service_part: string, cost: number, km_maintenance: number, date_maintenance?: Date) {
+    const user = await getSessionUser();
 
-    const vehicle = await listVehicleById(vehicleId);
+    if (!user) {
+        return {
+            sucesso: false,
+            mensagem: "Você precisa estar logado para cadastrar uma manutenção.",
+        };
+    }
+
+    const vehicle = await prisma.vehicles.findFirst({
+        where: {
+            id: vehicleId,
+            userId: user.id,
+        },
+    });
 
     if (!vehicle) {
         return {
@@ -224,25 +324,43 @@ export async function createMaintenance(vehicleId: number, service_part: string,
             cost,
             km_maintenance,
             date_maintenance,
-            vehicle: { connect: { id: vehicleId } }
+            vehicle: { connect: { id: vehicle.id } }
         },
     });
+
+    revalidatePath("/");
 
     return {
         sucesso: true,
         mensagem: "Manutenção cadastrada com sucesso!"
-    }
-
+    };
 }
 
+// Excluir manutenção somente se o veículo pertencer ao usuário logado
 export async function deleteMaintenance(id: number) {
-    const maintenance = await listMaintenanceById(id);
+    const user = await getSessionUser();
+
+    if (!user) {
+        return {
+            sucesso: false,
+            mensagem: "Você precisa estar logado para excluir uma manutenção.",
+        };
+    }
+
+    const maintenance = await prisma.maintenance.findFirst({
+        where: {
+            id,
+            vehicle: {
+                userId: user.id,
+            },
+        },
+    });
 
     if (!maintenance) {
         return {
             sucesso: false,
             mensagem: "Manutenção não encontrada!"
-        }
+        };
     }
 
     await prisma.maintenance.delete({
@@ -256,5 +374,5 @@ export async function deleteMaintenance(id: number) {
     return {
         sucesso: true,
         mensagem: "Manutenção excluída com sucesso!"
-    }
+    };
 }

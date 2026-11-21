@@ -1,11 +1,19 @@
-"use server";
-
 import Link from "next/link";
 import { listVehicles } from "@/app/veiculos-crud";
 import { DeleteVehicleButton } from "@/components/BotaoExcluirVeiculo";
 
 export async function VehicleList() {
     const vehicles = await listVehicles();
+
+    if (vehicles.length === 0) {
+        return (
+            <div className="p-3">
+                <p className="rounded-s border-2 border-gray-300 p-6 text-center text-gray-500">
+                    Nenhum veículo cadastrado. Clique em &quot;Cadastrar Veículo&quot; para adicionar o seu primeiro veículo.
+                </p>
+            </div>
+        );
+    }
 
     const vehiclesList = vehicles.map((vehicle) => (
         <li

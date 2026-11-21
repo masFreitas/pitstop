@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { requireUser } from "@/lib/auth";
 import { listVehicleById } from "@/app/veiculos-crud";
 import { CreateMaintenanceForm } from "@/components/CadastrarManutencaoForm";
 
@@ -8,6 +9,7 @@ type CadastrarManutencaoPageProps = {
 };
 
 async function CadastrarManutencaoContent({params}: CadastrarManutencaoPageProps) {
+    await requireUser();
     const { vehicleId } = await params;
     const id = Number(vehicleId);
 

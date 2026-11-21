@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import Link from "next/link";
 import { ToastContainer } from "react-toastify";
+import { HeaderActions } from "@/components/HeaderActions";
 
 
 export const metadata: Metadata = {
@@ -13,18 +15,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR">
       <body className="min-h-full flex flex-col">
-        <header className="bg-gray-400 p-4 flex justify-between items-center">
+        <header className="bg-gray-400 p-4 flex flex-wrap justify-between items-center gap-3">
           <Link href="/" className="flex items-center gap-4 text-2xl font-bold">
             PitStop
           </Link>
-          <div>
-            <Link
-              href="/cadastrar-veiculo"
-              className="bg-gray-900 text-white p-4 text-xl font-bold uppercase rounded-xl hover:bg-green-700"
-            >
-              Cadastrar Veículo
-            </Link>
-          </div>
+          <Suspense fallback={null}>
+            <HeaderActions />
+          </Suspense>
         </header>
         {children}
         <ToastContainer position="bottom-center" theme="dark" />
