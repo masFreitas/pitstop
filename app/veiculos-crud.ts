@@ -7,6 +7,7 @@ export async function listVehicles() {
     return prisma.vehicles.findMany();
 }
 
+//criar veiculo
 export async function createVehicle(plate: string, model: string, brand: string, year: number, current_km: number) {
     if (plate.length !== 7) {
         return {
@@ -49,4 +50,11 @@ export async function createVehicle(plate: string, model: string, brand: string,
         sucesso: true,
         mensagem: "Veículo cadastrado com sucesso!"
     }
+}
+
+export async function listMaintenance() {
+    return prisma.maintenance.findMany({
+        include: { vehicle: true },
+        orderBy: { date_maintenance: "desc" },
+    });
 }
