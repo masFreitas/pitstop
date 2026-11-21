@@ -64,6 +64,31 @@ export async function createVehicle(plate: string, model: string, brand: string,
     }
 }
 
+// Excluir veiculo
+export async function deleteVehicle(id: number) {
+    const vehicle = await listVehicleById(id);
+
+    if (!vehicle) {
+        return {
+            sucesso: false,
+            mensagem: "Veículo não encontrado!",
+        };
+    }
+
+    await prisma.vehicles.delete({
+        where: {
+            id: vehicle.id,
+        },
+    });
+
+    revalidatePath("/");
+
+    return {
+        sucesso: true,
+        mensagem: "Veículo excluído com sucesso!",
+    };
+}
+
 // Listar todas as manutencoes
 export async function listMaintenance() {
     return prisma.maintenance.findMany({

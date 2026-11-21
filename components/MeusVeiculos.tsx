@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { listVehicles } from "@/app/veiculos-crud";
+import { DeleteVehicleButton } from "@/components/BotaoExcluirVeiculo";
 
 export async function VehicleList() {
     const vehicles = await listVehicles();
@@ -32,11 +33,17 @@ export async function VehicleList() {
                     </p>
                 </div>
             </div>
-            <div className="border-t border-gray-300 pt-3">
-                <Link href={`/cadastrar-manutencao/${vehicle.id}`}
-                className="block w-full rounded-md bg-gray-900 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-green-700">
+            <div className="flex items-center gap-2 border-t border-gray-300 pt-3">
+                <Link
+                    href={`/cadastrar-manutencao/${vehicle.id}`}
+                    className="block flex-1 rounded-md bg-gray-900 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-green-700"
+                >
                     + Nova manutenção
                 </Link>
+                <DeleteVehicleButton
+                    vehicleId={vehicle.id}
+                    vehicleLabel={`${vehicle.brand} ${vehicle.model} (${vehicle.plate})`}
+                />
             </div>
         </li>
     ));
